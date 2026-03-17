@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joho/godotenv"
 	"net/http"
+
+	"github.com/KolesnikovP/fitness_training_app/backend/internal/http/router"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -14,13 +16,7 @@ func main() {
 	_ = godotenv.Load()
 	val := os.Getenv("TEST_VALUE")
 	fmt.Println(val)
-  mux := http.NewServeMux()
-  
-  mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Hello world!"))
-  })
-  
-  err := http.ListenAndServe("localhost:4100", mux)
-  fmt.Println(err)
 
+  err := http.ListenAndServe("localhost:4100", router.NewRouter())
+  fmt.Println(err)
 }
