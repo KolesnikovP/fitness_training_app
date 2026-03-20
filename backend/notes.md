@@ -39,3 +39,48 @@
   - `docker compose up -d postgres`
     Start only the PostgreSQL service again.
 
+  - `set -a`
+    Turn on auto-export so variables from `.env`
+  become environment variables.
+
+  - `source .env`
+    Load variables from `.env` into current shell.
+
+  - `set +a`
+    Turn off auto-export mode.
+
+  - `go install github.com/pressly/goose/v3/cmd/goose@latest`
+    Install Goose CLI binary.
+
+  - `goose -version`
+    Verify Goose is installed and available in PATH.
+
+  - `mkdir -p migrations`
+    Create migrations directory if it doesn't exist.
+
+  - `goose -dir migrations -s create create_users_table sql`
+    Create a new sequential SQL migration file
+  template (`Up`/`Down` sections).
+
+  - `goose -dir migrations postgres "$DATABASE_URL" up`
+    Apply pending migrations to the database.
+
+  - `goose -dir migrations postgres "$DATABASE_URL" down`
+    Roll back the most recent applied migration.
+
+  - `goose -dir migrations postgres "$DATABASE_URL" status`
+    Show migration state (applied vs pending).
+
+  - ## 🧾 Commands
+
+```bash
+# Turn on auto-export → every variable becomes an environment variable
+set -a
+# Load variables from file into current shell
+source .env
+# Turn off auto-export (back to normal)
+set +a
+# example of usage:
+goose -dir migrations postgres "$DATABASE_URL" up
+goose -dir migrations postgres "$DATABASE_URL" down
+```
