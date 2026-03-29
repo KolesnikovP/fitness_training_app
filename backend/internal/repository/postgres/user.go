@@ -33,5 +33,16 @@ func (r *UserRepository) Create(user domain.User) (*domain.User, error) {
 }
 
 func (r *UserRepository) FindByEmail(email string) (*domain.User, error){
-	return nil, nil
+	var user domain.User
+	query:=`SELECT * FROM users WHERE email = $1`
+
+	row := r.db.QueryRow(query, email)
+	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 } 
