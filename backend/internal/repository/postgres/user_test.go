@@ -1,21 +1,20 @@
-package main
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"log"
 	"os"
+	"testing"
 	"time"
 
-	"net/http"
-
-	"github.com/KolesnikovP/fitness_training_app/backend/internal/http/router"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/KolesnikovP/fitness_training_app/backend/internal/domain"
 	"github.com/joho/godotenv"
 )
 
-func main() {
-	if err := godotenv.Load(); err != nil {
+func TestCreateUser(t *testing.T) {
+	if err := godotenv.Load("../../../.env"); err != nil {
 		log.Println("warning: .env file not loaded, relying on environment variables")
 	}
 
@@ -38,7 +37,16 @@ func main() {
 		log.Fatal("Database ping failed:", err)
 	}
 
-	if err := http.ListenAndServe("localhost:4100", router.NewRouter()); err != nil {
-		log.Fatal("HTTP server failed:", err)
+	mockedUser := domain.User{
+		Email: "test2@example.com",
+		PasswordHash: "password1234",
 	}
+
+	userRepository := NewUserRepository(db)
+	createdUser, err := userRepository.Create(mockedUser)
+	if err != nil {
+		t.Fatal("Create failed: ", err)
+	}
+
+	log.Println("created user: ", createdUser)
 }
