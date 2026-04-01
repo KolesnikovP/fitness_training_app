@@ -10,6 +10,8 @@ import (
 	"net/http"
 
 	"github.com/KolesnikovP/fitness_training_app/backend/internal/http/router"
+	"github.com/KolesnikovP/fitness_training_app/backend/internal/repository/postgres"
+	"github.com/KolesnikovP/fitness_training_app/backend/internal/service"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
@@ -38,7 +40,10 @@ func main() {
 		log.Fatal("Database ping failed:", err)
 	}
 
-	if err := http.ListenAndServe("localhost:4100", router.NewRouter()); err != nil {
+	userRepo := postgres.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+
+	if err := http.ListenAndServe("localhost:4100", router.NewRouter(userService)); err != nil {
 		log.Fatal("HTTP server failed:", err)
 	}
 }

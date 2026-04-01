@@ -28,6 +28,10 @@ func (r *UserRepository) Create(user domain.User) (*domain.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 
 	return &user, nil
 }
@@ -39,10 +43,13 @@ func (r *UserRepository) FindByEmail(email string) (*domain.User, error){
 	row := r.db.QueryRow(query, email)
 	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return &user, nil
 } 
