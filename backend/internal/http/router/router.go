@@ -12,6 +12,9 @@ func NewRouter(userService *service.UserService) *chi.Mux {
 	
 	registerUser := handlers.RegisterUser{UserService: userService}
 	router.Post("/auth/register", registerUser.RegisterHandler)
+	
+	loginUser := handlers.LoginUser{UserService: userService}
+	router.Post("/auth/login", loginUser.LoginHandler)
 
 	return router
 }
