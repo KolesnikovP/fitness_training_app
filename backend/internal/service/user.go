@@ -41,3 +41,25 @@ func (r *UserService) RegisterUser(email string, password string) (*domain.User,
 
 	return r.userRepository.Create(registeredUser)
 } 
+
+
+func (r *UserService) LoginUser(email string, password string) (*domain.User, error) {
+	responseFromDB, err := r.userRepository.FindByEmail(email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if responseFromDB == nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	result := bcrypt.CompareHashAndPassword([]byte(responseFromDB.PasswordHash), []byte(password))
+
+	if result != nil {
+		return nil, errors.New("wrong password")
+	}
+
+	
+	return responseFromDB, nil
+}
