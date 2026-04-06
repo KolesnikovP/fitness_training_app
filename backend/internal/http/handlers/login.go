@@ -1,8 +1,9 @@
-
 package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/KolesnikovP/fitness_training_app/backend/internal/service"
@@ -15,29 +16,36 @@ type LoginForm struct {
 
 type LoginUser struct {
 	UserService *service.UserService
+	Logger *slog.Logger
+}
+
+type LoginResponse struct { 
+	Token string `json:"token"`
 }
 
 
-func (h *LoginUser) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var form LoginForm	
-	err := json.NewDecoder(r.Body).Decode(&form)
-	if err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
+var ErrInvalidCredentials = errors.New("invalid credentials")
 
-	user, err := h.UserService.LoginUser(form.Email, form.Password)
-
-  if err != nil {
-      if err.Error() == "invalid credentials" {
-          http.Error(w, "invalid credentials", http.StatusUnauthorized)
-			} else {
-          http.Error(w, "internal server error", http.StatusInternalServerError)
+  func (h *LoginUser) LoginHandler(w http.ResponseWriter, r *http.Request) {
+      var form LoginForm
+      if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
+          http.Error(w, "invalid request body", http.StatusBadRequest)
+          return
       }
-      return
+
+      token, err := h.UserService.LoginUser(form.Email, form.Password)
+      if errors.Is(err, ErrInvalidCredentials) {
+          http.Error(w, "invalid credentials", http.StatusUnauthorized)
+          return
+      }
+      if err != nil {
+          h.Logger.Error("login failed", "error", err)
+          http.Error(w, "internal server error", http.StatusInternalServerError)
+          return
+      }
+			
+			h.Logger.Info("Success!", "user_email", form.Email)
+      w.Header().Set("Content-Type", "application/json")
+      json.NewEncoder(w).Encode(LoginResponse{Token: token})
   }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
-
-}

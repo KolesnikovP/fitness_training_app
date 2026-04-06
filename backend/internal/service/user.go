@@ -2,9 +2,12 @@ package service
 
 import (
 	"errors"
+	"os"
+	"time"
 
 	"github.com/KolesnikovP/fitness_training_app/backend/internal/domain"
 	"github.com/KolesnikovP/fitness_training_app/backend/internal/repository"
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 type UserService struct {
@@ -43,23 +46,37 @@ func (r *UserService) RegisterUser(email string, password string) (*domain.User,
 } 
 
 
-func (r *UserService) LoginUser(email string, password string) (*domain.User, error) {
+func (r *UserService) LoginUser(email string, password string) (string, error) {
 	responseFromDB, err := r.userRepository.FindByEmail(email)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if responseFromDB == nil {
-		return nil, errors.New("invalid credentials")
+		return "", errors.New("invalid credentials")
 	}
 
 	result := bcrypt.CompareHashAndPassword([]byte(responseFromDB.PasswordHash), []byte(password))
 
 	if result != nil {
-		return nil, errors.New("wrong password")
+		return "", errors.New("wrong password")
 	}
 
-	
-	return responseFromDB, nil
+	jwt_key := os.Getenv("JWT_KEY")
+
+	claims := jwt.MapClaims{
+		"user_id": responseFromDB.ID,
+		"email": responseFromDB.Email,
+		"exp": time.Now().Add(15 * time.Minute).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedString, err := token.SignedString([]byte(jwt_key))
+
+	if err != nil {
+		return "", err
+	}
+
+	return signedString, nil
 }
