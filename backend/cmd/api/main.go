@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -42,8 +43,8 @@ func main() {
 
 	userRepo := postgres.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
-
-	if err := http.ListenAndServe("localhost:4100", router.NewRouter(userService)); err != nil {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	if err := http.ListenAndServe("localhost:4100", router.NewRouter(userService, logger)); err != nil {
 		log.Fatal("HTTP server failed:", err)
 	}
 }
