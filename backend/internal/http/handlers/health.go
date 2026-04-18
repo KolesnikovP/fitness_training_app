@@ -1,11 +1,24 @@
 package handlers
 
-import "net/http"
-import "fmt"
+import (
+	"database/sql"
+	"encoding/json"
+	"net/http"
+)
 
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
-	
-	fmt.Println("/health handler works")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Ok"))
+type HealthHandler struct {
+	DB *sql.DB
+}
+
+func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
+	dbStatus := "ok"
+	if err := h.DB.PingContext(r.Context()); err != nil {
+		dbStatus = "error"
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "ok",
+		"db":     dbStatus,
+	})
 }

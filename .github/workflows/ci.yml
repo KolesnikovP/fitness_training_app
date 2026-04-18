@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, sprint-2]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  backend:
+    name: Backend — Test & Security Scan
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: fitness_user
+          POSTGRES_PASSWORD: fitness_pass
+          POSTGRES_DB: fitness_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://fitness_user:fitness_pass@localhost:5432/fitness_db?sslmode=disable
+      JWT_KEY: ci_test_jwt_key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: backend/go.sum
+
+      - name: Install goose (migrations)
+        run: go install github.com/pressly/goose/v3/cmd/goose@latest
+
+      - name: Run migrations
+        working-directory: backend
+        run: goose -dir migrations postgres "$DATABASE_URL" up
+
+      - name: Run tests
+        working-directory: backend
+        run: go test ./... -v -timeout 60s
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        working-directory: backend
+        run: govulncheck ./...
