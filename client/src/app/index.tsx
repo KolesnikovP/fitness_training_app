@@ -14,7 +14,7 @@ export default function Index() {
   }
 
   if (isLoggedIn) {
-    return <Redirect href="/(app)/exercises" />;
+    return <Redirect href={"/(app)/" as any} />;
   }
 
   return <Redirect href="/(auth)/login" />;
